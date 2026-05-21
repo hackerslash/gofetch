@@ -63,8 +63,6 @@ func Run(ctx context.Context, client *http.Client, start string, opts Options) (
 	jobs := make(chan item)
 	var pending sync.WaitGroup
 	var workers sync.WaitGroup
-	var firstErr error
-	var errMu sync.Mutex
 
 	enqueue := func(it item) {
 		if it.URL.Scheme != root.Scheme || it.URL.Host != root.Host {
@@ -98,11 +96,6 @@ func Run(ctx context.Context, client *http.Client, start string, opts Options) (
 			for it := range jobs {
 				local, links, err := fetch(ctx, client, root, it.URL, opts.OutputDir)
 				if err != nil {
-					errMu.Lock()
-					if firstErr == nil {
-						firstErr = err
-					}
-					errMu.Unlock()
 					pending.Done()
 					continue
 				}
@@ -125,9 +118,6 @@ func Run(ctx context.Context, client *http.Client, start string, opts Options) (
 	pending.Wait()
 	close(jobs)
 	workers.Wait()
-	if firstErr != nil {
-		return result, firstErr
-	}
 	return result, ctx.Err()
 }
 

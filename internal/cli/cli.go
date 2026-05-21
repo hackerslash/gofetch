@@ -161,12 +161,7 @@ func runMirror(ctx context.Context, args []string, stdout, stderr io.Writer) int
 		return 2
 	}
 	if tui.IsTerminal(stdout) {
-		res, err := tui.RunMirror(ctx, stdout, http.DefaultClient, fs.Arg(0), mirror.Options{OutputDir: *output, Workers: *workers, MaxDepth: *depth})
-		if err != nil {
-			fmt.Fprintln(stderr, err)
-			return 1
-		}
-		_ = res
+		tui.RunMirror(ctx, stdout, http.DefaultClient, fs.Arg(0), mirror.Options{OutputDir: *output, Workers: *workers, MaxDepth: *depth})
 		return 0
 	}
 	res, err := mirror.Run(ctx, http.DefaultClient, fs.Arg(0), mirror.Options{OutputDir: *output, Workers: *workers, MaxDepth: *depth})
