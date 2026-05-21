@@ -2,7 +2,7 @@
 
 Gofetch is a native Go download manager with curl-like commands, concurrent segmented downloads, resumable temp state, same-host mirroring, and mirror benchmarking.
 
-![Gofetch terminal UI](assets/screnshot.png)
+![Gofetch terminal UI](assets/screenshot.webp)
 
 ## Features
 
