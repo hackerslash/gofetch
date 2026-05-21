@@ -9,7 +9,7 @@ Gofetch is a native Go download manager with curl-like commands, concurrent segm
 - Concurrent HTTP downloads with configurable workers.
 - Segmented `Range` downloads when the server supports byte ranges.
 - Terminal UI for live total progress, per-thread progress, and download speed.
-- Pause with `p` or `Ctrl+C`, then resume from the task file in `/tmp/gofetch`.
+- Pause with `p` or `Ctrl+C`, then resume from the task file printed in the UI (stored under the OS temp directory).
 - Temporary `.task` and part files stay out of the working directory and are deleted after a successful download.
 - Same-host static mirroring for HTML, CSS, JS, images, fonts, and linked assets.
 - Basic mirror benchmarking with latency and throughput ranking.
@@ -52,10 +52,10 @@ Mirror a same-host static site:
 ./gofetch mirror https://example.com --depth 2 --workers 8 --output mirror
 ```
 
-Resume a paused download:
+Resume a paused download (the UI prints the exact path):
 
 ```bash
-./gofetch resume /tmp/gofetch/<id>.task
+./gofetch resume <path/to/id.task>
 ```
 
 Benchmark mirrors:
@@ -86,10 +86,10 @@ or:
 Ctrl+C
 ```
 
-The UI prints a resume command using the task file stored in `/tmp/gofetch`. Run that command to continue:
+The UI prints the exact resume command with the task file path. Run it to continue:
 
 ```bash
-./gofetch resume /tmp/gofetch/<id>.task
+./gofetch resume <path/to/id.task>
 ```
 
 When the download completes, Gofetch removes the temp task file and part files automatically. Only the final downloaded file remains in the current directory unless `--output` is provided.

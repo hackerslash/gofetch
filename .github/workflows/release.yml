@@ -18,18 +18,23 @@ jobs:
           - goos: darwin
             goarch: arm64
             ext: ""
+            archive: tar.gz
           - goos: darwin
             goarch: amd64
             ext: ""
+            archive: tar.gz
           - goos: linux
             goarch: arm64
             ext: ""
+            archive: tar.gz
           - goos: linux
             goarch: amd64
             ext: ""
+            archive: tar.gz
           - goos: windows
             goarch: amd64
             ext: ".exe"
+            archive: zip
 
     steps:
       - name: Checkout
@@ -48,8 +53,16 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
         run: |
           mkdir -p dist
-          name="gofetch-${GITHUB_REF_NAME}-${GOOS}-${GOARCH}${{ matrix.ext }}"
-          go build -trimpath -ldflags="-s -w" -o "dist/${name}" ./cmd/gofetch
+          binary="gofetch${{ matrix.ext }}"
+          archive="gofetch-${GITHUB_REF_NAME}-${GOOS}-${GOARCH}.${{ matrix.archive }}"
+          go build -trimpath -ldflags="-s -w" -o "dist/${binary}" ./cmd/gofetch
+          cd dist
+          if [ "${{ matrix.archive }}" = "zip" ]; then
+            zip "${archive}" "${binary}"
+          else
+            tar czf "${archive}" "${binary}"
+          fi
+          rm "${binary}"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

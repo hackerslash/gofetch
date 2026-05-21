@@ -73,6 +73,18 @@ func LoadTask(path string) (*Task, error) {
 	if task.Version != taskVersion {
 		return nil, errors.New("unsupported task file version")
 	}
+	// Normalize TempDir and PartPaths to the current machine's temp root.
+	// The hash component is machine-independent; only the OS temp prefix changes.
+	if task.TempDir != "" {
+		hash := filepath.Base(task.TempDir)
+		expected := filepath.Join(os.TempDir(), "gofetch", hash)
+		if task.TempDir != expected {
+			for i := range task.Ranges {
+				task.Ranges[i].PartPath = filepath.Join(expected, filepath.Base(task.Ranges[i].PartPath))
+			}
+			task.TempDir = expected
+		}
+	}
 	return &task, nil
 }
 
