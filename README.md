@@ -64,6 +64,12 @@ Benchmark mirrors:
 ./gofetch bench https://mirror1.example/file https://mirror2.example/file --samples 3
 ```
 
+Delete all paused download state:
+
+```bash
+./gofetch clean
+```
+
 ## Pause And Resume
 
 During `get` or `resume`, Gofetch shows a terminal UI with:
@@ -93,6 +99,18 @@ The UI prints the exact resume command with the task file path. Run it to contin
 ```
 
 When the download completes, Gofetch removes the temp task file and part files automatically. Only the final downloaded file remains in the current directory unless `--output` is provided.
+
+## Clean
+
+`gofetch clean` removes all paused download state — every `.task` file and its associated part files stored in the OS temp directory. It prints each URL it removes and reports the total count.
+
+```bash
+./gofetch clean
+# removing: https://example.com/file.zip
+# removed 1 task(s)
+```
+
+If there is nothing to clean, it exits silently with `no temp files to clean`.
 
 ## URL Lists
 

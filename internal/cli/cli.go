@@ -35,6 +35,8 @@ func RunContext(ctx context.Context, args []string, stdout, stderr io.Writer) in
 		return runMirror(ctx, args[1:], stdout, stderr)
 	case "bench":
 		return runBench(ctx, args[1:], stdout, stderr)
+	case "clean":
+		return runClean(args[1:], stdout, stderr)
 	case "-h", "--help", "help":
 		usage(stdout)
 		return 0
@@ -193,6 +195,45 @@ func runBench(ctx context.Context, args []string, stdout, stderr io.Writer) int 
 	return 0
 }
 
+func runClean(args []string, stdout, stderr io.Writer) int {
+	fs := flag.NewFlagSet("clean", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	if err := fs.Parse(args); err != nil {
+		return 2
+	}
+	root := downloader.TempRoot()
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Fprintln(stdout, "no temp files to clean")
+			return 0
+		}
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	var count int
+	for _, e := range entries {
+		if !strings.HasSuffix(e.Name(), ".task") {
+			continue
+		}
+		count++
+		task, err := downloader.LoadTask(filepath.Join(root, e.Name()))
+		if err == nil {
+			fmt.Fprintf(stdout, "removing: %s\n", task.URL)
+		}
+	}
+	if err := os.RemoveAll(root); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	if count == 0 {
+		fmt.Fprintln(stdout, "no temp files to clean")
+	} else {
+		fmt.Fprintf(stdout, "removed %d task(s)\n", count)
+	}
+	return 0
+}
+
 func resolveTargets(target string) ([]string, bool, error) {
 	if strings.HasPrefix(target, "http://") || strings.HasPrefix(target, "https://") {
 		return []string{target}, false, nil
@@ -222,7 +263,8 @@ Commands:
   gofetch get <url|urls.txt> [--workers N] [--output PATH]
   gofetch mirror <url> [--workers N] [--depth N] [--output DIR]
   gofetch resume <download.task>
-  gofetch bench <url...> [--samples N]`)
+  gofetch bench <url...> [--samples N]
+  gofetch clean`)
 }
 
 func interspersed(args []string) []string {
