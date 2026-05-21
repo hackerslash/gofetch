@@ -173,7 +173,7 @@ func runBench(ctx context.Context, args []string, stdout, stderr io.Writer) int 
 	fs := flag.NewFlagSet("bench", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	samples := fs.Int("samples", 1, "samples per URL")
-	if err := fs.Parse(args); err != nil {
+	if err := fs.Parse(interspersed(args)); err != nil {
 		return 2
 	}
 	if fs.NArg() < 1 {
