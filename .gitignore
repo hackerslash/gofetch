@@ -12,6 +12,9 @@ coverage.out
 /gofetch
 /gofetch.exe
 
+# Gofetch output directories
+mirror/
+
 # Gofetch download artifacts
 *.task
 *.part
