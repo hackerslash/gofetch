@@ -160,6 +160,15 @@ func runMirror(ctx context.Context, args []string, stdout, stderr io.Writer) int
 		fmt.Fprintln(stderr, "usage: gofetch mirror <url> [--workers N] [--depth N] [--output DIR]")
 		return 2
 	}
+	if tui.IsTerminal(stdout) {
+		res, err := tui.RunMirror(ctx, stdout, http.DefaultClient, fs.Arg(0), mirror.Options{OutputDir: *output, Workers: *workers, MaxDepth: *depth})
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return 1
+		}
+		_ = res
+		return 0
+	}
 	res, err := mirror.Run(ctx, http.DefaultClient, fs.Arg(0), mirror.Options{OutputDir: *output, Workers: *workers, MaxDepth: *depth})
 	if err != nil {
 		fmt.Fprintln(stderr, err)
@@ -180,7 +189,12 @@ func runBench(ctx context.Context, args []string, stdout, stderr io.Writer) int 
 		fmt.Fprintln(stderr, "usage: gofetch bench <url...> [--samples N]")
 		return 2
 	}
-	results := bench.Run(ctx, &http.Client{Timeout: 30 * time.Second}, fs.Args(), *samples)
+	client := &http.Client{Timeout: 30 * time.Second}
+	if tui.IsTerminal(stdout) {
+		tui.RunBench(ctx, stdout, client, fs.Args(), *samples)
+		return 0
+	}
+	results := bench.Run(ctx, client, fs.Args(), *samples, nil)
 	for i, res := range results {
 		if res.Error != "" {
 			fmt.Fprintf(stdout, "%d. %s error=%s\n", i+1, res.URL, res.Error)

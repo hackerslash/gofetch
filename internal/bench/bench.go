@@ -23,7 +23,7 @@ type Result struct {
 	Error         string
 }
 
-func Run(ctx context.Context, client *http.Client, urls []string, samples int) []Result {
+func Run(ctx context.Context, client *http.Client, urls []string, samples int, onResult func(Result)) []Result {
 	if client == nil {
 		client = http.DefaultClient
 	}
@@ -52,6 +52,9 @@ func Run(ctx context.Context, client *http.Client, urls []string, samples int) [
 			merged.ThroughputBps = totalThroughput / float64(okSamples)
 		}
 		results = append(results, merged)
+		if onResult != nil {
+			onResult(merged)
+		}
 	}
 	sort.SliceStable(results, func(i, j int) bool {
 		return results[i].ThroughputBps > results[j].ThroughputBps

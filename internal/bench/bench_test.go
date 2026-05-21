@@ -14,7 +14,7 @@ func TestBenchRanksFastestFirst(t *testing.T) {
 	slow := benchServer(30 * time.Millisecond)
 	defer slow.Close()
 
-	results := Run(context.Background(), http.DefaultClient, []string{slow.URL, fast.URL}, 1)
+	results := Run(context.Background(), http.DefaultClient, []string{slow.URL, fast.URL}, 1, nil)
 	if len(results) != 2 {
 		t.Fatalf("got %d results", len(results))
 	}

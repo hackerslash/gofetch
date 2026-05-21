@@ -18,6 +18,7 @@ type Options struct {
 	OutputDir string
 	Workers   int
 	MaxDepth  int
+	OnFile    func(string)
 }
 
 type Result struct {
@@ -108,6 +109,9 @@ func Run(ctx context.Context, client *http.Client, start string, opts Options) (
 				seenMu.Lock()
 				result.Downloaded = append(result.Downloaded, local)
 				seenMu.Unlock()
+				if opts.OnFile != nil {
+					opts.OnFile(local)
+				}
 				for _, link := range links {
 					if it.Depth < opts.MaxDepth || !looksHTML(link) {
 						enqueue(item{URL: link, Depth: it.Depth + 1})
