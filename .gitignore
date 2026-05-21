@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+
+# Go build/test output
+bin/
+dist/
+coverage.out
+*.test
+*.prof
+
+# Local compiled binary
+/gofetch
+/gofetch.exe
+
+# Gofetch download artifacts
+*.task
+*.part
+*.parts/
+
+# Editor and local environment files
+.idea/
+.vscode/
+*.swp
+*.swo
+.env
+.env.*
