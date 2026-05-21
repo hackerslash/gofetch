@@ -446,8 +446,9 @@ func (c *Client) downloadRange(ctx context.Context, taskPath string, task *Task,
 	if have > need {
 		have = 0
 	}
-	rt.BytesWritten = have
-	c.emitProgress(taskPath, task, segment, *rt, false, false)
+	snapshot := *rt
+	snapshot.BytesWritten = have
+	c.emitProgress(taskPath, task, segment, snapshot, false, false)
 	mode := os.O_CREATE | os.O_WRONLY
 	if have > 0 {
 		mode |= os.O_APPEND
@@ -474,8 +475,9 @@ func (c *Client) downloadRange(ctx context.Context, taskPath string, task *Task,
 	writer := &progressWriter{
 		writer: out,
 		onWrite: func(n int64) {
-			rt.BytesWritten = have + n
-			c.emitProgress(taskPath, task, segment, *rt, false, false)
+			local := *rt
+			local.BytesWritten = have + n
+			c.emitProgress(taskPath, task, segment, local, false, false)
 		},
 	}
 	_, copyErr := io.Copy(writer, resp.Body)
@@ -544,29 +546,30 @@ func mergeParts(task *Task) error {
 	if err != nil {
 		return err
 	}
-	for _, rt := range task.Ranges {
-		if !rt.Done {
-			_ = out.Close()
-			return errors.New("cannot merge incomplete task")
+	mergeErr := func() error {
+		for _, rt := range task.Ranges {
+			if !rt.Done {
+				return errors.New("cannot merge incomplete task")
+			}
+			part, err := os.Open(rt.PartPath)
+			if err != nil {
+				return err
+			}
+			_, copyErr := io.Copy(out, part)
+			closeErr := part.Close()
+			if copyErr != nil {
+				return copyErr
+			}
+			if closeErr != nil {
+				return closeErr
+			}
 		}
-		part, err := os.Open(rt.PartPath)
-		if err != nil {
-			_ = out.Close()
-			return err
-		}
-		_, copyErr := io.Copy(out, part)
-		closeErr := part.Close()
-		if copyErr != nil {
-			_ = out.Close()
-			return copyErr
-		}
-		if closeErr != nil {
-			_ = out.Close()
-			return closeErr
-		}
-	}
-	if err := out.Close(); err != nil {
-		return err
+		return nil
+	}()
+	_ = out.Close()
+	if mergeErr != nil {
+		_ = os.Remove(tmp)
+		return mergeErr
 	}
 	return os.Rename(tmp, task.Output)
 }
